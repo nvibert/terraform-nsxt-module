@@ -6,38 +6,26 @@ variable "vmc_token" {
   description = "VMC Token"
 }
 
-variable "Subnet12" {
-  default = "12.12.12.0/24"
+variable "Subnet" {
+  default = "10.10.10.0/24"
 }
 
-variable "Subnet12gw" {
-  default = "12.12.12.1/24"
+variable "TransportZone" {
+  default = "vmc-overlay-tz"
 }
 
-variable "Subnet12dhcp" {
-  default = "12.12.12.100-12.12.12.200"
+variable "SubnetGateway" {
+  default = "10.10.10.1/24"
 }
 
-variable "Subnet13" {
-  default = "13.13.13.0/24"
+variable "SubnetRange" {
+  default = "10.10.10.100-10.10.10.200"
 }
 
-variable "Subnet13gw" {
-  default = "13.13.13.1/24"
+variable "NameCriteria" {
+  default = "vmname"
 }
 
-variable "Subnet13dhcp" {
-  default = "13.13.13.100-13.13.13.200"
-}
-
-variable "Subnet14" {
-  default = "14.14.14.0/24"
-}
-
-variable "Subnet14gw" {
-  default = "14.14.14.1/24"
-}
-
-variable "Photo_IP" {
-  default = "18.133.44.151"
+variable "TagCriteria" {
+  default = "tagValue"
 }
