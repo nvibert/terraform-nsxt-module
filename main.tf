@@ -19,12 +19,9 @@ provider "nsxt" {
 Get SDDC data
 ============*/
 
-data "nsxt_policy_tier0_gateway" "vmc" {
-  display_name = "vmc"
-}
 
 data "nsxt_policy_transport_zone" "TZ" {
-  display_name = "vmc-overlay-tz"
+  display_name = var.TransportZone
 }
 
 
@@ -32,14 +29,14 @@ data "nsxt_policy_transport_zone" "TZ" {
 Create segments
 ===============*/
 
-resource "nsxt_policy_segment" "segment12" {
-  display_name        = "segment12"
+resource "nsxt_policy_segment" "sampleSegment" {
+  display_name        = "sample Segment"
   description         = "Terraform provisioned Segment"
   connectivity_path   = "/infra/tier-1s/cgw"
   transport_zone_path = data.nsxt_policy_transport_zone.TZ.path
   subnet {
-    cidr              = var.Subnet12gw
-    dhcp_ranges       = [var.Subnet12dhcp]
+    cidr              = var.SubnetGateway
+    dhcp_ranges       = [var.SubnetRange]
   }
 }
 
@@ -54,7 +51,7 @@ resource "nsxt_policy_group" "ip-address-based-group" {
   domain       = "cgw"
   criteria {
     ipaddress_expression {
-      ip_addresses = [var.SubnetCriteria]
+      ip_addresses = [var.Subnet]
     }
   }
 }
@@ -72,7 +69,7 @@ resource "nsxt_policy_group" "name-based-group" {
             key         = "Name"
             member_type = "VirtualMachine"
             operator    = "CONTAINS"
-            value       = [var.NameCriteria]
+            value       = var.NameCriteria
         }
     }
   
@@ -83,16 +80,16 @@ resource "nsxt_policy_group" "name-based-group" {
 /*=====================================
 Create Security Group based on NSX Tags
 ======================================*/
-resource "nsxt_policy_group" "Blue_VMs" {
-  display_name = "Blue_VMs"
-  description = "Terraform provisioned Group"
+resource "nsxt_policy_group" "tag-based-group" {
+  display_name = "tag-based-group"
+  description = "Terraform-provisioned Group"
   domain       = "cgw"
   criteria {
     condition {
       key = "Tag"
       member_type = "VirtualMachine"
       operator = "EQUALS"
-      value = "Blue|NSX_tag"
+      value = var.TagCriteria
     }
   }
 }
@@ -102,7 +99,7 @@ resource "nsxt_policy_group" "Blue_VMs" {
 Create DFW rules
 ======================================*/
 resource "nsxt_policy_security_policy" "Terraform_section" {
-  display_name = "Terraform_section"
+  display_name = "Terraform_section_1"
   description = "Terraform provisioned Security Policy"
   category = "Application"
   domain = "cgw"
@@ -122,8 +119,8 @@ resource "nsxt_policy_security_policy" "Terraform_section" {
   }
 }
 
-resource "nsxt_policy_security_policy" "Colors" {
-  display_name = "Colors"
+resource "nsxt_policy_security_policy" "Terraform_section_2" {
+  display_name = "Terraform_section_1"
   description = "Terraform provisioned Security Policy"
   category = "Application"
   domain = "cgw"
@@ -132,9 +129,9 @@ resource "nsxt_policy_security_policy" "Colors" {
   tcp_strict = false
 
   rule {
-    display_name = "Blue2Red"
+    display_name = "Security Rule #1"
     source_groups = [
-      nsxt_policy_group.Blue_VMs.path]
+      nsxt_policy_group.tag-based-group.path]
     destination_groups = [
       nsxt_policy_group.ip-address-based-group.path]
     action = "DROP"
@@ -142,11 +139,11 @@ resource "nsxt_policy_security_policy" "Colors" {
     logged = true
   }
   rule {
-    display_name = "Red2Blue"
+    display_name = "Security Rule #2"
     source_groups = [
       nsxt_policy_group.ip-address-based-group.path]
     destination_groups = [
-      nsxt_policy_group.Blue_VMs.path]
+      nsxt_policy_group.tag-based-group.path]
     action = "DROP"
     services = ["/infra/services/ICMP-ALL"]
     logged = true
